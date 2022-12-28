@@ -1,0 +1,23 @@
+model_type: egnn
+model_params:
+  input_node_dim: 6
+  input_edge_dim: 1
+  hidden_dim: 64
+  num_layers: 4
+  num_coords: 3
+  num_velocities: 3
+  update_coords: true
+  predict_type: coord
+  output_dim: 3
+optimizer_params:
+  lr: 0.0003
+dataset_type: nbody
+dataset_params:
+  root: ./data/nbody
+  num_samples: 3000
+loader_params:
+  batch_size: 100
+  num_workers: 16
+trainer_params:
+  log_every_n_steps: 10
+  max_epochs: 200

@@ -1,0 +1,22 @@
+model_type: gnn
+model_params:
+  input_node_dim: 9
+  input_edge_dim: 1
+  hidden_dim: 128
+  output_dim: 128
+  num_layers: 7
+  attention: true
+  predict_type: node_pooling
+criterion_type: mae
+optimizer_params:
+  lr: 0.0005
+dataset_type: qm9
+dataset_params:
+  root: ./data/qm9/
+  label: Cv
+loader_params:
+  batch_size: 96
+  num_workers: 16
+trainer_params:
+  log_every_n_steps: 10
+  max_epochs: 5
