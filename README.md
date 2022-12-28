@@ -12,7 +12,7 @@ cd egnn
 pip install -e .
 ```
 
-Download NBody and QM9 datasets and unpack them.
+Download [NBody and QM9](https://drive.google.com/drive/folders/19AUFCMlDXVdOENtz2HRNHoR13i8OX7Ej?usp=share_link) datasets and unpack them.
 
 Then you can run `egnn` package as a Python 3 module. **Note**: check
 dataset root directory in `.yaml` config. 
