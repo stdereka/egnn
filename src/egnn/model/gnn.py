@@ -19,15 +19,18 @@ class ResidualMLP(torch.nn.Module):
 
 
 class GNN(torch.nn.Module):
+    """Graph Convolutional Neural Network"""
     def __init__(self, input_node_dim, input_edge_dim, output_dim, attention=False,
                  hidden_dim=64, num_layers=4, predict_type="unembedding"):
         """
-
-        :param input_node_dim:
-        :param input_edge_dim:
-        :param output_dim:
-        :param hidden_dim:
-        :param num_layers:
+        :param input_node_dim: Number of node features.
+        :param input_edge_dim: Number of edge features.
+        :param output_dim: How many features to predict for each node.
+        :param attention: Whether to use attention for neighbour aggregation.
+        :param hidden_dim: Number of features in all hidden layers.
+        :param num_layers: Number of convolutional layers.
+        :param predict_type: Model prediction type. `unembedding` - predict `output_dim` features for each node.
+        `node_pooling` - predict one feature for the entire graph.
         """
         super(GNN, self).__init__()
 
@@ -73,6 +76,13 @@ class GNN(torch.nn.Module):
             ])
 
     def forward(self, node_features, edge_indices, edges_features, batch_size):
+        """
+        :param node_features: Node features, `num_nodes` x `input_node_dim` tensor.
+        :param edge_indices: Edge node indices: two tensors (`first_node_ids`, `second_node_ids`)
+        :param edges_features: Edge features, `num_edges` x `input_edge_dim` tensor.
+        :param batch_size: How many graphs passed in a batch. Required for `node_pooling` prediction type.
+        :return: (model prediction, edge_indices, edges_features)
+        """
         node_features = self.embedding(node_features)
         node_features, _, _ = self.convs((node_features, edge_indices, edges_features))
 
@@ -90,20 +100,25 @@ class GNN(torch.nn.Module):
 
 
 class EquivariantGNN(torch.nn.Module):
+    """E(n) Equivariant Graph Neural Network."""
     def __init__(self, input_node_dim, input_edge_dim, output_dim, attention=False, num_coords=3,
                  num_velocities=0, update_coords=True, hidden_dim=64, num_layers=4,
                  predict_type="coord"):
         """
-
-        :param input_node_dim:
-        :param input_edge_dim:
-        :param output_dim:
-        :param num_coords:
-        :param num_velocities:
-        :param update_coords:
-        :param hidden_dim:
-        :param num_layers:
-        :param predict_type:
+        :param input_node_dim: Number of node features.
+        :param input_edge_dim: Number of edge features.
+        :param output_dim: How many features to predict for each node.
+        :param attention: Whether to use attention for neighbour aggregation.
+        :param num_coords: Number of coordinate features. First `num_coords` features in `node_features` are treated as
+        coordinates.
+        :param num_velocities: Number of vector "velocity" features.
+        Features from `num_coords` + 1 to `num_coords` + `num_velocities` in `node_features` are treated as
+        velocities.
+        :param update_coords: Whether to update coordinated on each convolution layer.
+        :param hidden_dim: Number of features in all hidden layers.
+        :param num_layers: Number of convolutional layers.
+        :param predict_type: Model prediction type. `unembedding` - predict `output_dim` features for each node.
+        `node_pooling` - predict one feature for the entire graph. `coord` - return final coordinates for each node.
         """
         super(EquivariantGNN, self).__init__()
 
@@ -173,6 +188,13 @@ class EquivariantGNN(torch.nn.Module):
             ])
 
     def forward(self, node_features, edge_indices, edges_features, batch_size):
+        """
+        :param node_features: Node features, `num_nodes` x `input_node_dim` tensor.
+        :param edge_indices: Edge node indices: two tensors (`first_node_ids`, `second_node_ids`)
+        :param edges_features: Edge features, `num_edges` x `input_edge_dim` tensor.
+        :param batch_size: How many graphs passed in a batch. Required for `node_pooling` prediction type.
+        :return: (model prediction, edge_indices, edges_features)
+        """
         coords, velocities, node_features = unpack_node_params(node_features, self.num_coords, self.num_velocities)
         node_features = self.embedding(node_features)
 
@@ -193,6 +215,6 @@ class EquivariantGNN(torch.nn.Module):
             node_features = node_features.sum(dim=1)
             pred = self.pool(node_features)
         else:
-            raise ValueError()
+            raise ValueError("Unknown predict type.")
 
         return pred, edge_indices, edges_features
